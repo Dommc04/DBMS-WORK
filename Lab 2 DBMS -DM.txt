@@ -1,0 +1,91 @@
+# 🛡️ Lab 2: Database Integrity & Backup — PostgreSQL (created summary with Chat GPT) 
+
+## 📚 Objective
+This lab focused on implementing **data integrity constraints**, managing **relational dependencies**, and performing **database backup and restoration** using PostgreSQL. The goals included:
+- Creating secure, constraint-enforced database tables
+- Ensuring data consistency through schema-level rules
+- Backing up and restoring the database to prevent data loss
+- Validating that unauthorized or inconsistent data is rejected
+
+---
+
+## 🧱 Part 1: Database and Table Creation
+
+### ✔️ Created Database
+```sql
+✔️ Created student Table
+
+CREATE TABLE student (
+    tno CHAR(9) PRIMARY KEY CHECK (tno SIMILAR TO 'T[0-9]{8}'),
+    social CHAR(9) UNIQUE NOT NULL CHECK (social SIMILAR TO '[0-9]{9}'),
+    fname VARCHAR(20) NOT NULL,
+    lname VARCHAR(20) NOT NULL,
+    credits INTEGER NOT NULL DEFAULT 0 CHECK (credits >= 0 AND credits <= 999)
+);
+✔️ Created takes Table
+
+CREATE TABLE takes (
+    tno CHAR(9) NOT NULL,
+    course VARCHAR(12) NOT NULL,
+    semester VARCHAR(6) NOT NULL CHECK (semester IN ('FALL', 'SPRING', 'SUMMER')),
+    tyear CHAR(4) NOT NULL CHECK (tyear ~ '^[0-9]{4}$'),
+    grade CHAR(1) CHECK (grade IN ('A', 'B', 'C', 'D', 'F')),
+    PRIMARY KEY (tno, course, semester, tyear),
+    FOREIGN KEY (tno) REFERENCES student(tno) ON DELETE CASCADE
+);
+📸 Screenshots:
+
+student.png
+
+takes.png
+
+🧪 Part 2: Testing Insertions and Modifications
+Inserted Sample Row
+INSERT INTO student(tno, social, fname, lname, credits)
+VALUES ('T00006879', '407225463', 'Mary', 'May', 63);
+Created Temporary Table
+CREATE TABLE id(ID int);
+📸 Screenshot:
+
+modified.png
+
+💾 Part 3: Backup and Restore
+Performed Backup
+pg_dump -h localhost -U postgres -f students_bak.sql students
+Verified Backup Completion
+tail -n 5 students_bak.sql
+📸 Screenshot:
+
+backup.png
+
+Restored Database After Drop
+-- Drop and recreate DB from postgres prompt
+DROP DATABASE students;
+CREATE DATABASE students;
+psql -h localhost -U postgres students < students_bak.sql
+📸 Screenshot:
+
+restore.png
+
+🔍 Part 4: Verification After Restore
+Checked for Deleted Row and Table
+SELECT * FROM student;
+\dt
+✅ Mary May row was gone
+✅ id table no longer existed
+
+📸 Screenshot:
+
+gone.png
+
+✅ Summary of Integrity Features
+Enforced primary key and foreign key relationships
+
+Used CHECK, NOT NULL, SIMILAR TO, and IN constraints
+
+Prevented duplicate SSNs and invalid input formats
+
+Ensured automatic deletion of dependent rows via ON DELETE CASCADE
+
+Verified backup/restore integrity against test modifications
+
