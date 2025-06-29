@@ -1,0 +1,222 @@
+# CSC 3300 - Lab #1 (Summer 2025)
+**Database Systems — Firebird + MySQL**
+
+## ✅ Skills Practiced
+- Writing SQL Queries (SELECT, JOIN, GROUP BY, etc.)
+- Creating Tables and Keys (DDL)
+- Inserting and Retrieving Data
+- Filtering Data with SQL Patterns
+- Using Terminal with MySQL
+- Submitting Proper Screenshots
+
+---
+
+## 🔧 Part 1: Firebird via FlameRobin (Problems 1–5)
+
+### ✔️ Setup
+- Launched **FlameRobin**.
+- Connected to: `localhost → Employee`.
+- Logged in with:
+  - Username: `XXXXXXXXXXXXXXX`
+  - Password: `XXXXXXXX`
+- Opened SQL window by right-clicking on **Employee** → **Execute SQL Statements**
+
+---
+
+### 🧩 Problem 1: Customers who spent under $1000 and have known state/province
+SELECT DISTINCT c.CONTACT_FIRST, c.CONTACT_LAST
+FROM CUSTOMER c
+JOIN SALES s ON c.CUST_NO = s.CUST_NO
+WHERE s.TOTAL_VALUE < 1000
+  AND c.STATE_PROVINCE IS NOT NULL;
+📁 Saved screenshot as: PROBLEM1.PNG
+
+🧩 Problem 2: Engineers hired after 1992 with no ≥10% salary increase since 1993
+
+SELECT e.FIRST_NAME, e.LAST_NAME
+FROM EMPLOYEE e
+WHERE e.JOB_CODE = 'Eng'
+  AND EXTRACT(YEAR FROM e.HIRE_DATE) > 1992
+  AND NOT EXISTS (
+    SELECT 1
+    FROM SALARY_HISTORY sh
+    WHERE sh.EMP_NO = e.EMP_NO
+      AND EXTRACT(YEAR FROM sh.CHANGE_DATE) >= 1993
+      AND sh.PERCENT_CHANGE >= 10
+  );
+📁 Saved screenshot as: PROBLEM2.PNG
+
+🧩 Problem 3: Departments with incorrectly formatted phone numbers
+
+Valid format: (###) ###-#### (14 characters)
+SELECT DEPT_NO, PHONE_NO
+FROM DEPARTMENT
+WHERE PHONE_NO NOT LIKE '(___) ___-____';
+📁 Saved screenshot as: PROBLEM3.PNG
+
+✅ Detected numbers like (408)555-1234 as invalid due to missing space.
+
+🧩 Problem 4: Software project team leaders hired after March 1, 1991
+
+SELECT e.FIRST_NAME, e.LAST_NAME
+FROM EMPLOYEE e
+JOIN PROJECT p ON e.EMP_NO = p.TEAM_LEADER
+WHERE p.PRODUCT = 'software'
+  AND e.HIRE_DATE > '1991-03-01';
+📁 Saved screenshot as: PROBLEM4.PNG
+
+🧩 Problem 5: Union of job codes and project IDs in a single column CODE
+
+SELECT JOB_CODE AS CODE FROM JOB
+UNION
+SELECT PROJ_ID AS CODE FROM PROJECT;
+📁 Saved screenshot as: PROBLEM5.PNG
+
+💻 Part 2: MySQL via Terminal (Problems 6–13)
+✔️ Setup
+
+mysql -h localhost -u root -pXX_XXXXX
+
+CREATE DATABASE movie_db;
+USE movie_db;
+📁 Saved screenshot as: PROBLEM6.PNG
+
+🧩 Problem 6: Create movie tables with PKs and FKs
+
+CREATE TABLE ACTOR (
+  aid INT PRIMARY KEY,
+  fname VARCHAR(30),
+  lname VARCHAR(30),
+  gender CHAR(1)
+) ENGINE=InnoDB;
+
+CREATE TABLE MOVIE (
+  mid INT PRIMARY KEY,
+  name VARCHAR(150),
+  year INT
+) ENGINE=InnoDB;
+
+CREATE TABLE DIRECTORS (
+  did INT PRIMARY KEY,
+  fname VARCHAR(30),
+  lname VARCHAR(30)
+) ENGINE=InnoDB;
+
+CREATE TABLE CASTS (
+  aid INT,
+  mid INT,
+  role VARCHAR(50),
+  PRIMARY KEY (aid, mid),
+  FOREIGN KEY (aid) REFERENCES ACTOR(aid),
+  FOREIGN KEY (mid) REFERENCES MOVIE(mid)
+) ENGINE=InnoDB;
+
+CREATE TABLE MOVIE_DIRECTORS (
+  did INT,
+  mid INT,
+  PRIMARY KEY (did, mid),
+  FOREIGN KEY (did) REFERENCES DIRECTORS(did),
+  FOREIGN KEY (mid) REFERENCES MOVIE(mid)
+) ENGINE=InnoDB;
+
+CREATE TABLE GENRE (
+  mid INT,
+  genre VARCHAR(50),
+  PRIMARY KEY (mid, genre),
+  FOREIGN KEY (mid) REFERENCES MOVIE(mid)
+) ENGINE=InnoDB;
+📁 Saved screenshot as: PROBLEM6.PNG
+
+🧩 Problem 7: Insert Schindler’s List (IMDb)
+Movie: 'Schindler's List', 1993
+
+Director: Steven Spielberg
+
+Actors: Liam Neeson, Ben Kingsley, Ralph Fiennes
+
+-- MOVIE, DIRECTORS, GENRE
+INSERT INTO MOVIE VALUES (1, 'Schindler''s List', 1993);
+INSERT INTO DIRECTORS VALUES (1, 'Steven', 'Spielberg');
+INSERT INTO MOVIE_DIRECTORS VALUES (1, 1);
+INSERT INTO GENRE VALUES (1, 'Drama');
+INSERT INTO GENRE VALUES (1, 'History');
+INSERT INTO GENRE VALUES (1, 'War');
+
+-- ACTORS & CASTS
+INSERT INTO ACTOR VALUES (1, 'Liam', 'Neeson', 'M');
+INSERT INTO ACTOR VALUES (2, 'Ben', 'Kingsley', 'M');
+INSERT INTO ACTOR VALUES (3, 'Ralph', 'Fiennes', 'M');
+INSERT INTO CASTS VALUES (1, 1, 'Oskar Schindler');
+INSERT INTO CASTS VALUES (2, 1, 'Itzhak Stern');
+INSERT INTO CASTS VALUES (3, 1, 'Amon Goeth');
+📁 Saved screenshot as: PROBLEM7.PNG
+
+🧩 Problem 8: Insert Rob Roy (IMDb)
+Movie: 'Rob Roy', 1995
+
+Director: Michael Caton-Jones
+
+Actors: Liam Neeson, Jessica Lange, John Hurt
+
+-- MOVIE, DIRECTORS, GENRE
+INSERT INTO MOVIE VALUES (2, 'Rob Roy', 1995);
+INSERT INTO DIRECTORS VALUES (2, 'Michael', 'Caton-Jones');
+INSERT INTO MOVIE_DIRECTORS VALUES (2, 2);
+INSERT INTO GENRE VALUES (2, 'Adventure');
+INSERT INTO GENRE VALUES (2, 'Biography');
+INSERT INTO GENRE VALUES (2, 'Drama');
+
+-- ACTORS & CASTS
+INSERT INTO ACTOR VALUES (4, 'Jessica', 'Lange', 'F');
+INSERT INTO ACTOR VALUES (5, 'John', 'Hurt', 'M');
+INSERT INTO CASTS VALUES (1, 2, 'Rob Roy MacGregor');
+INSERT INTO CASTS VALUES (4, 2, 'Mary MacGregor');
+INSERT INTO CASTS VALUES (5, 2, 'Marquis of Montrose');
+📁 Saved screenshot as: PROBLEM8.PNG
+
+🧩 Problem 9: Movies that are Dramas with Liam Neeson
+
+SELECT DISTINCT m.name
+FROM MOVIE m
+JOIN CASTS c ON m.mid = c.mid
+JOIN ACTOR a ON c.aid = a.aid
+JOIN GENRE g ON m.mid = g.mid
+WHERE a.fname = 'Liam' AND a.lname = 'Neeson'
+  AND g.genre = 'Drama';
+📁 Saved screenshot as: PROBLEM9.PNG
+
+🧩 Problem 10: Movie pairs with same actor
+
+SELECT a.fname, a.lname, m1.name AS movie1, m2.name AS movie2
+FROM ACTOR a
+JOIN CASTS c1 ON a.aid = c1.aid
+JOIN CASTS c2 ON a.aid = c2.aid AND c1.mid < c2.mid
+JOIN MOVIE m1 ON c1.mid = m1.mid
+JOIN MOVIE m2 ON c2.mid = m2.mid;
+📁 Saved screenshot as: PROBLEM10.PNG
+
+🧩 Problem 11 (Problem 12 in prompt): Movies with more than 2 genres
+
+SELECT m.name
+FROM MOVIE m
+JOIN GENRE g ON m.mid = g.mid
+GROUP BY m.mid
+HAVING COUNT(DISTINCT g.genre) > 2;
+📁 Saved screenshot as: PROBLEM12.PNG
+
+📦 Submission Guide
+🗂️ Include These 12 Screenshots:
+Problem	Filename
+1	PROBLEM1.PNG
+2	PROBLEM2.PNG
+3	PROBLEM3.PNG
+4	PROBLEM4.PNG
+5	PROBLEM5.PNG
+6	PROBLEM6.PNG
+7	PROBLEM7.PNG
+8	PROBLEM8.PNG
+9	PROBLEM9.PNG
+10	PROBLEM10.PNG
+11	PROBLEM12.PNG
+
+🎉 Lab Complete!
