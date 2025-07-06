@@ -1,0 +1,124 @@
+# Lab 4 Report: Access Privileges, Views, and Stored Functions in PostgreSQL
+
+## 🔐 Part 1: Access Privileges
+
+### 🎯 Objective
+To understand and implement PostgreSQL access control mechanisms using `GRANT` and `REVOKE` on database objects like tables.
+
+### 🧪 Steps & Observations
+
+1. **Create User `fb_user_1`**  
+   A new user was created to simulate privilege restrictions:
+   ```sql
+   CREATE USER fb_user_1 WITH PASSWORD 'fb_user_1';
+   GRANT ALL ON ALL TABLES IN SCHEMA public TO PUBLIC;
+✅ Verified by logging in as fb_user_1 and running:
+
+
+SELECT * FROM country;
+📸 Screenshot: lab4_part1_image1.png
+
+Revoke All Privileges from PUBLIC
+
+
+REVOKE ALL ON ALL TABLES IN SCHEMA public FROM PUBLIC;
+✅ Querying country as fb_user_1 now fails.
+
+📸 Screenshot: lab4_part1_image2.png
+
+Grant SELECT Privilege to PUBLIC on country Table
+
+
+GRANT SELECT ON country TO PUBLIC;
+✅ fb_user_1 can now run SELECT * FROM country; again.
+
+📸 Screenshot: lab4_part1_image3.png
+
+Grant INSERT Privilege on country to fb_user_1 Only
+
+
+GRANT INSERT ON country TO fb_user_1;
+✅ Inserted:
+
+
+INSERT INTO country VALUES ('Finland', 'Euro');
+SELECT * FROM country;
+📸 Screenshot: lab4_part1_image4.png
+
+👁️ Part 2: Views
+🎯 Objective
+To limit access to sensitive columns in a table using views.
+
+🧪 Steps & Observations
+Create View employee_brief
+
+
+CREATE VIEW employee_brief AS 
+SELECT emp_no, first_name, last_name FROM employee;
+✅ View created to hide salary and hire_date from PUBLIC.
+
+
+SELECT * FROM employee_brief LIMIT 5;
+📸 Screenshot: lab4_part2_image1.png
+
+Grant SELECT on View to PUBLIC
+
+
+GRANT SELECT ON employee_brief TO PUBLIC;
+✅ Verified using:
+
+
+SELECT * FROM information_schema.table_privileges WHERE table_name='employee_brief';
+📸 Screenshot: lab4_part2_image2.png
+
+Test Access with fb_user_1
+
+SELECT * FROM employee; → ❌ Permission denied
+
+SELECT * FROM employee_brief LIMIT 5; → ✅ Success
+
+📸 Screenshot: lab4_part2_image3.png
+
+⚙️ Part 3: Stored Functions
+🎯 Objective
+To create a stored function that returns limited employee data and can be securely executed by restricted users.
+
+🧪 Steps & Observations
+Create Function employee_brief_fun()
+
+
+CREATE FUNCTION employee_brief_fun()
+RETURNS TABLE (emp_no empno, first_name VARCHAR(15), last_name VARCHAR(20))
+LANGUAGE SQL AS $$
+    SELECT emp_no, first_name, last_name FROM employee;
+$$;
+✅ Tested:
+
+
+SELECT * FROM employee_brief_fun() LIMIT 5;
+📸 Screenshot: lab4_part3_image1.png
+
+Initial GRANT EXECUTE Attempt Fails
+Even after:
+
+
+GRANT EXECUTE ON FUNCTION employee_brief_fun TO PUBLIC;
+➡️ Error: Permission denied for table employee
+
+Fix with Role-Based Security
+
+Create role and grant:
+
+
+CREATE ROLE employee_exec;
+GRANT SELECT ON employee TO employee_exec;
+ALTER FUNCTION employee_brief_fun OWNER TO employee_exec;
+ALTER FUNCTION employee_brief_fun SECURITY DEFINER;
+GRANT EXECUTE ON FUNCTION employee_brief_fun TO PUBLIC;
+✅ As fb_user_1:
+
+SELECT * FROM employee; → ❌ Permission denied
+
+SELECT * FROM employee_brief_fun() LIMIT 5; → ✅ Success
+
+📸 Screenshot: lab4_part3_image2.png
