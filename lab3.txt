@@ -1,4 +1,4 @@
-# Lab 4 Report: Access Privileges, Views, and Stored Functions in PostgreSQL
+# Lab 3 Report: Access Privileges, Views, and Stored Functions in PostgreSQL
 
 ## 🔐 Part 1: Access Privileges
 
