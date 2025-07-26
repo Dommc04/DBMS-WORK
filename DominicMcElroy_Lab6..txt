@@ -1,0 +1,36 @@
+Lab 6 Normalization
+Name: Dominic McElroy
+
+Table S 
+TR	AV	BR	IS	UM	ET
+jj	fs	ca	ms	fe	1
+jj	fs	ti	ms	fe	1
+rp	th	ma	mr	ml	1
+rp	th	dg	mr	ml	1
+rp	fv	ti	sr	ml	2
+
+Attributes: TR, AV, BR, IS, UM, ET
+
+Functional Dependencies:
+1. TR → AV, IS  
+2. TR, BR → ET  
+3. IS → UM  
+4. BR, ET → TR  
+
+a) Key: (TR, BR) because, TR alone cant determine all attributes. TR and BR together determine ET, and TR determines AV. IS determines UM. (TR, BR) can determine all other attributes.
+
+b) AV and IS are partially Dependent! 
+
+on TR no partial dependencies on BR. 
+
+
+c) Second Normal Form
+
+	X(TR, AV, IS)  , Y(TR, BR, ET, UM)
+            table 1          table 2
+
+d)  Third Normal Form 
+
+	X(TR, AV, IS)  , Y(TR, BR, ET)  , Z(IS, UM)
+         table 1           table 2          table 3
+
